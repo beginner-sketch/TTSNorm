@@ -26,7 +26,6 @@ parser.add_argument('--test_batch_size', default = 8, type=int, help='test batch
 parser.add_argument('--lr', default = 0.0001, type=int, help='learning rate')
 parser.add_argument('--data', default = 'AIR', type=str, help = 'NYC or AIR')
 parser.add_argument('--indim', default = 1, type=int, help = 'in_dim is 1 or 4')
-parser.add_argument('--bilinear', default = True, type=bool, help='model uses bilinear or not')
 parser.add_argument('--mix_loss', default = False, type=bool, help='mix loss or total loss')
 parser.add_argument('--alpha', default = 0.005, type=int, help='loss weight for mix_loss(bike)')
 parser.add_argument('-graph', default = 0, type=int, help = 'use graph or not')
@@ -54,7 +53,9 @@ snnorm_bool = bool(args.snnorm)
 layers = int(np.log2(args.n_his))
 #######################################
 def train(device, model, dataset, n, n_source):
-    target_n = "g{}_intra{}_inter{}_s{}_t{}_sn{}_bintra{}_hc{}_l{}_his{}_pred{}_v{}_scaler{}_bil{}".format(args.graph, args.intra_norm, args.inter_norm, args.snorm, args.tnorm, args.snnorm, args.bintra_norm, args.hidden_channels, layers, args.n_his, args.n_pred, args.version,args.scaler,args.bilinear)
+    target_n = "g{}_intra{}_inter{}_s{}_t{}_sn{}_bintra{}_hc{}_l{}_his{}_pred{}_v{}_scaler{}".format(args.graph, args.intra_norm, args.inter_norm, args.snorm, args.tnorm, 
+                                                                                                     args.snnorm, args.bintra_norm, args.hidden_channels, layers, args.n_his, 
+                                                                                                     args.n_pred, args.version,args.scaler)
     target_fname = '{}_{}_{}'.format(args.model, dataset_name, target_n)
     target_model_path = os.path.join('MODEL', '{}.h5'.format(target_fname))
     print('=' * 10)
@@ -136,7 +137,9 @@ def eval(device, n_source, model, dataset, n, versions):
     for _v in versions:
         torch.cuda.empty_cache()
         min_val = min_va_val = np.array([4e1, 1e5, 1e5] * 3)  
-        target_n = "g{}_intra{}_inter{}_s{}_t{}_sn{}_bintra{}_hc{}_l{}_his{}_pred{}_v{}_scaler{}_bil{}".format(args.graph, args.intra_norm, args.inter_norm, args.snorm, args.tnorm, args.snnorm, args.bintra_norm, args.hidden_channels, layers, args.n_his, args.n_pred, _v, args.scaler,args.bilinear)
+        target_n = "g{}_intra{}_inter{}_s{}_t{}_sn{}_bintra{}_hc{}_l{}_his{}_pred{}_v{}_scaler{}".format(args.graph, args.intra_norm, args.inter_norm, args.snorm, args.tnorm, 
+                                                                                                         args.snnorm, args.bintra_norm, args.hidden_channels, layers, args.n_his,
+                                                                                                         args.n_pred, _v, args.scaler)
         target_fname = '{}_{}_{}'.format(args.model, dataset_name, target_n)
         target_model_path = os.path.join('MODEL', '{}.h5'.format(target_fname))        
         if os.path.isfile(target_model_path):
@@ -197,11 +200,10 @@ def main():
     print("channel in: ", args.indim)
     print("hidden channels: ", args.hidden_channels)
     print("layers: ", layers)
-    print("bilinear:", args.bilinear)
     print("scaler form: ", args.scaler)
     print("mix loss: ", args.mix_loss)
     if args.mix_loss:
-        print("loss weight for bike(alpha): ", args.alpha)
+        print("loss weight for alpha: ", args.alpha)
     start=time.time()
     # load data
     print('=' * 10)
@@ -226,8 +228,7 @@ def main():
     model = NaryNet(device, n, n_source, dropout=0, supports=None, gcn_bool=gcn_bool, intra_bool=intra_bool, inter_bool=inter_bool,
                     tnorm_bool=tnorm_bool, snorm_bool=snorm_bool, snnorm_bool=snnorm_bool, addaptadj=True, aptinit=None,
                     in_dim=1,out_dim=args.n_pred,residual_channels=args.hidden_channels,dilation_channels=args.hidden_channels,
-                    skip_channels=args.hidden_channels,end_channels=args.hidden_channels, kernel_size=2, blocks=1, layers=layers,
-                    bili_bool=args.bilinear).to(device)
+                    skip_channels=args.hidden_channels,end_channels=args.hidden_channels, kernel_size=2, blocks=1, layers=layers).to(device)
 # args.n_layers
     print('=' * 10)
     print("init model...")
