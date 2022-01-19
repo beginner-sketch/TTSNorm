@@ -129,7 +129,8 @@ class gcn(nn.Module):
 
 class NaryNet(nn.Module):
     def __init__(self, device, num_nodes, num_source, dropout=0.3, supports=None, gcn_bool=True, intra_bool=False, inter_bool=False,
-                 tnorm_bool=False, snorm_bool=False, snnorm_bool=False, addaptadj=True, aptinit=None,         in_dim=4,out_dim=12,residual_channels=32,dilation_channels=32,skip_channels=256,end_channels=512,kernel_size=2,blocks=4,layers=2,bili_bool=False):
+                 tnorm_bool=False, snorm_bool=False, snnorm_bool=False, addaptadj=True, aptinit=None, in_dim=4,out_dim=12,residual_channels=32,
+                 dilation_channels=32,skip_channels=256,end_channels=512,kernel_size=2,blocks=4,layers=2):
         super(NaryNet, self).__init__()
         self.num_source = num_source
         self.dropout = dropout
@@ -143,15 +144,12 @@ class NaryNet(nn.Module):
         self.tnorm_bool = tnorm_bool
         self.snnorm_bool = snnorm_bool
         self.addaptadj = addaptadj
-        self.bili_bool = bili_bool
         
-        self.bilinear = nn.ModuleList()
-        self.bilinear_conv1 = nn.ModuleList()
-        self.bilinear_conv2 = nn.ModuleList()
         self.filter_convs = nn.ModuleList()
         self.gate_convs = nn.ModuleList()
         self.residual_convs = nn.ModuleList()
         self.skip_convs = nn.ModuleList()
+        
         if self.tnorm_bool:
             self.tnorm = nn.ModuleList()
         if self.snorm_bool:
@@ -216,15 +214,6 @@ class NaryNet(nn.Module):
                     self.intranorm.append(Intra_Normalize(residual_channels, num_source))
                 if self.inter_bool:
                     self.internorm.append(Inter_Normalize(residual_channels, num_nodes))
-                # bilinear
-                if self.bili_bool:
-                    self.bilinear_conv1.append(nn.Conv3d(in_channels = 2 * residual_channels,
-                                                 out_channels= int(0.5 * residual_channels),
-                                                 kernel_size=(1, 1, 1)))
-                    self.bilinear_conv2.append(nn.Conv3d(in_channels = (num-1) * residual_channels,
-                                                     out_channels=residual_channels,
-                                                     kernel_size=(1, 1, 1)))
-                    self.bilinear.append(nn.Bilinear(int(0.5 * residual_channels), residual_channels, num * residual_channels))
                 ###
                 self.filter_convs.append(nn.Conv3d(in_channels=num * residual_channels,
                                                    out_channels=num_source * dilation_channels,
@@ -269,8 +258,7 @@ class NaryNet(nn.Module):
         self.receptive_field = receptive_field
 
     def forward(self, input):
-        input = input.permute(0, 4, 3, 2, 1) # [b,t,n,s,c] - > [b,c,s,n,t]
-#         print("input:", input.shape)
+        input = input.permute(0, 4, 3, 2, 1)
         in_len = input.size(4)
         if in_len<self.receptive_field:
             x = nn.functional.pad(input,(self.receptive_field-in_len,0,0,0))
@@ -284,59 +272,28 @@ class NaryNet(nn.Module):
         if self.gcn_bool and self.addaptadj and self.supports is not None:
             adp = F.softmax(F.relu(torch.matmul(self.nodevec1, self.nodevec2)), dim=1)
             new_supports = self.supports + [adp]
-        # WaveNet layers
+        # layers
         for i in range(self.blocks * self.layers):
             residual = x
             # Normalize
-            if self.bili_bool:     # use bilinear
-                x1_list = []
-                x2_list = []
-                x1_list.append(x)
-                x2_list.append(x)
-                if self.tnorm_bool:
-                    x_tnorm = self.tnorm[i](x)
-                    x2_list.append(x_tnorm)
-                if self.snorm_bool:
-                    x_snorm = self.snorm[i](x)
-                    x2_list.append(x_snorm)
-                if self.intra_bool:
-                    x_intra = self.intranorm[i](x)
-                    x1_list.append(x_intra)
-                if self.inter_bool:
-                    x_inter = self.internorm[i](x)
-                    x2_list.append(x_inter)    
-                if self.snnorm_bool:
-                    x_snnorm = self.snnorm[i](x)
-                    x2_list.append(x_snnorm)
-                x1 = torch.cat(x1_list, dim=1)
-                x2 = torch.cat(x2_list, dim=1)
-                # 先压缩1/4，再bilinear
-                x1_temp = self.bilinear_conv1[i](x1)     
-                x2_temp = self.bilinear_conv2[i](x2)     
-                x1_temp = x1_temp.permute(0,2,3,4,1)       
-                x2_temp = x2_temp.permute(0,2,3,4,1)       
-
-                x_bil = self.bilinear[i](x1_temp.contiguous(), x2_temp.contiguous())    
-                x = x_bil.permute(0,4,1,2,3)
-            else:
-                x_list = []
-                x_list.append(x)
-                if self.tnorm_bool:
-                    x_tnorm = self.tnorm[i](x)
-                    x_list.append(x_tnorm)
-                if self.snorm_bool:
-                    x_snorm = self.snorm[i](x)
-                    x_list.append(x_snorm)
-                if self.snnorm_bool:
-                    x_snnorm = self.snnorm[i](x)
-                    x_list.append(x_snnorm)
-                if self.intra_bool:
-                    x_intra = self.intranorm[i](x)
-                    x_list.append(x_intra)
-                if self.inter_bool:
-                    x_inter = self.internorm[i](x)
-                    x_list.append(x_inter)
-                x = torch.cat(x_list, dim=1)           
+            x_list = []
+            x_list.append(x)
+            if self.tnorm_bool:
+                x_tnorm = self.tnorm[i](x)
+                x_list.append(x_tnorm)
+            if self.snorm_bool:
+                x_snorm = self.snorm[i](x)
+                x_list.append(x_snorm)
+            if self.snnorm_bool:
+                x_snnorm = self.snnorm[i](x)
+                x_list.append(x_snnorm)
+            if self.intra_bool:
+                x_intra = self.intranorm[i](x)
+                x_list.append(x_intra)
+            if self.inter_bool:
+                x_inter = self.internorm[i](x)
+                x_list.append(x_inter)
+            x = torch.cat(x_list, dim=1)           
             # dilated convolution
             filter = self.filter_convs[i](x)
             b, _, _, n, t = filter.shape
@@ -386,11 +343,12 @@ def main():
     t = 16
     hidden_channels = 16
     n_layers = 4
-    bili_bool = True
     GPU = sys.argv[-1] if len(sys.argv) == 2 else '1'
     device = torch.device("cuda:{}".format(GPU)) if torch.cuda.is_available() else torch.device("cpu")
 
-    model = NaryNet(device, n, num_source, dropout=0, supports=None, gcn_bool=0, intra_bool=1, inter_bool=1, tnorm_bool=1, snorm_bool=1, snnorm_bool=1,addaptadj=True, aptinit=None, in_dim=1,out_dim=3, residual_channels=hidden_channels, dilation_channels=hidden_channels, skip_channels=hidden_channels, end_channels=hidden_channels, kernel_size=2, blocks=1, layers=n_layers, bili_bool=bili_bool).to(device)
+    model = NaryNet(device, n, num_source, dropout=0, supports=None, gcn_bool=0, intra_bool=1, inter_bool=1, tnorm_bool=1, snorm_bool=1, snnorm_bool=1,
+                    addaptadj=True, aptinit=None, in_dim=1,out_dim=3, residual_channels=hidden_channels, dilation_channels=hidden_channels, 
+                    skip_channels=hidden_channels, end_channels=hidden_channels, kernel_size=2, blocks=1, layers=n_layers).to(device)
     summary(model, (t, n, num_source, channel), device=device)
     
 if __name__ == '__main__':
