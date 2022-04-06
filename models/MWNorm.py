@@ -84,6 +84,18 @@ class SN_Normalize(nn.Module):
 
         out = x_norm * self.gamma + self.beta
         return out
+    
+class ST_Normalize(nn.Module):
+    def __init__(self, channels):
+        super(ST_Normalize, self).__init__()
+        self.beta = nn.Parameter(torch.zeros(1,channels,1,1,1))
+        self.gamma = nn.Parameter(torch.ones(1,channels,1,1,1))
+
+    def forward(self, x):
+        x_norm = (x - x.mean((2, 4), keepdims=True)) / (x.var((2, 4), keepdims=True, unbiased=True) + 0.00001) ** 0.5
+
+        out = x_norm * self.gamma + self.beta
+        return out
 
 class nconv(nn.Module):
     def __init__(self):
@@ -129,7 +141,7 @@ class gcn(nn.Module):
 
 class MWNorm(nn.Module):
     def __init__(self, device, num_nodes, num_source, dropout=0.3, supports=None, gcn_bool=True, intra_bool=False, inter_bool=False,
-                 tnorm_bool=False, snorm_bool=False, snnorm_bool=False, addaptadj=True, aptinit=None, in_dim=4,out_dim=12,residual_channels=32,
+                 tnorm_bool=False, snorm_bool=False, snnorm_bool=False, stnorm_bool=False, addaptadj=True, aptinit=None, in_dim=4,out_dim=12,residual_channels=32,
                  dilation_channels=32,skip_channels=256,end_channels=512,kernel_size=2,blocks=4,layers=2):
         super(MWNorm, self).__init__()
         self.num_source = num_source
@@ -143,6 +155,7 @@ class MWNorm(nn.Module):
         self.snorm_bool = snorm_bool
         self.tnorm_bool = tnorm_bool
         self.snnorm_bool = snnorm_bool
+        self.stnorm_bool = stnorm_bool
         self.addaptadj = addaptadj
         
         self.filter_convs = nn.ModuleList()
@@ -160,6 +173,8 @@ class MWNorm(nn.Module):
             self.intranorm = nn.ModuleList()
         if self.inter_bool:
             self.internorm = nn.ModuleList()
+        if self.stnorm_bool:
+            self.stnorm = nn.ModuleList()
         num = int(self.tnorm_bool)+int(self.snorm_bool)+int(self.snnorm_bool)+int(self.intra_bool)+int(self.inter_bool)+1
 
         self.mlps = nn.ModuleList()
@@ -214,6 +229,8 @@ class MWNorm(nn.Module):
                     self.intranorm.append(Intra_Normalize(residual_channels, num_source))
                 if self.inter_bool:
                     self.internorm.append(Inter_Normalize(residual_channels, num_nodes))
+                if self.stnorm_bool:
+                    self.stnorm.append(ST_Normalize(residual_channels))
                 ###
                 self.filter_convs.append(nn.Conv3d(in_channels=num * residual_channels,
                                                    out_channels=num_source * dilation_channels,
@@ -293,6 +310,9 @@ class MWNorm(nn.Module):
             if self.inter_bool:
                 x_inter = self.internorm[i](x)
                 x_list.append(x_inter)
+            if self.stnorm_bool:
+                x_stnorm = self.stnorm[i](x)
+                x_list.append(x_stnorm)
             x = torch.cat(x_list, dim=1)           
             # dilated convolution
             filter = self.filter_convs[i](x)
