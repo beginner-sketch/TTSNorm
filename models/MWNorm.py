@@ -127,11 +127,11 @@ class gcn(nn.Module):
         h = F.dropout(h, self.dropout, training=self.training)
         return h
 
-class NaryNet(nn.Module):
+class MWNorm(nn.Module):
     def __init__(self, device, num_nodes, num_source, dropout=0.3, supports=None, gcn_bool=True, intra_bool=False, inter_bool=False,
                  tnorm_bool=False, snorm_bool=False, snnorm_bool=False, addaptadj=True, aptinit=None, in_dim=4,out_dim=12,residual_channels=32,
                  dilation_channels=32,skip_channels=256,end_channels=512,kernel_size=2,blocks=4,layers=2):
-        super(NaryNet, self).__init__()
+        super(MWNorm, self).__init__()
         self.num_source = num_source
         self.dropout = dropout
         self.blocks = blocks
@@ -346,7 +346,7 @@ def main():
     GPU = sys.argv[-1] if len(sys.argv) == 2 else '1'
     device = torch.device("cuda:{}".format(GPU)) if torch.cuda.is_available() else torch.device("cpu")
 
-    model = NaryNet(device, n, num_source, dropout=0, supports=None, gcn_bool=0, intra_bool=1, inter_bool=1, tnorm_bool=1, snorm_bool=1, snnorm_bool=1,
+    model = MWNorm(device, n, num_source, dropout=0, supports=None, gcn_bool=0, intra_bool=1, inter_bool=1, tnorm_bool=1, snorm_bool=1, snnorm_bool=1,
                     addaptadj=True, aptinit=None, in_dim=1,out_dim=3, residual_channels=hidden_channels, dilation_channels=hidden_channels, 
                     skip_channels=hidden_channels, end_channels=hidden_channels, kernel_size=2, blocks=1, layers=n_layers).to(device)
     summary(model, (t, n, num_source, channel), device=device)
