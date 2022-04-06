@@ -1,5 +1,5 @@
-# NaryNet
-This is a implementation of NaryNet.
+# MWNorm
+This is a implementation of MWNorm.
 
 # Installation Dependencies
 
