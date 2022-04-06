@@ -34,6 +34,7 @@ parser.add_argument('-inter_norm', default = 1, type=int, help = 'use inter_norm
 parser.add_argument('-snorm', default = 1, type=int, help = 'use snorm or not')
 parser.add_argument('-tnorm', default = 1, type=int, help = 'use tnorm or not')
 parser.add_argument('-snnorm', default = 1, type=int, help = 'use snnorm or not')
+parser.add_argument('-stnorm', default = 1, type=int, help = 'use stnorm or not')
 parser.add_argument('-hidden_channels', default = 64, type=int, help = 'hidden channels')
 parser.add_argument('-n_his', default = 16, type=int, help = 'time step in')
 parser.add_argument('-n_pred', default = 3, type=int, help = 'horizon')
@@ -226,7 +227,7 @@ def main():
     print("compiling model...")
 
     model = MWNorm(device, n, n_source, dropout=0, supports=None, gcn_bool=gcn_bool, intra_bool=intra_bool, inter_bool=inter_bool,
-                    tnorm_bool=tnorm_bool, snorm_bool=snorm_bool, snnorm_bool=snnorm_bool, addaptadj=True, aptinit=None,
+                    tnorm_bool=tnorm_bool, snorm_bool=snorm_bool, snnorm_bool=snnorm_bool, stnorm_bool=stnorm_bool, addaptadj=True, aptinit=None,
                     in_dim=1,out_dim=args.n_pred,residual_channels=args.hidden_channels,dilation_channels=args.hidden_channels,
                     skip_channels=args.hidden_channels,end_channels=args.hidden_channels, kernel_size=2, blocks=1, layers=layers).to(device)
 # args.n_layers
