@@ -6,7 +6,7 @@ import sys
 import argparse
 import numpy as np
 import math
-from models.NaryNet import *
+from models.MWNorm import *
 from utils.data_utils_mutilsource import *
 from utils.math_utils_mutilsource import *
 from utils.tester_mutilsource import model_inference
@@ -20,7 +20,7 @@ np.random.seed(1337)  # for reproducibility
 torch.backends.cudnn.benchmark = True
 # Params #
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', default = 'NaryNet', type=str, help = 'model name')
+parser.add_argument('--model', default = 'MWNorm', type=str, help = 'model name')
 parser.add_argument('--batch_size', default = 8, type=int, help='batch size')
 parser.add_argument('--test_batch_size', default = 8, type=int, help='test batch size')
 parser.add_argument('--lr', default = 0.0001, type=int, help='learning rate')
@@ -225,7 +225,7 @@ def main():
     print('=' * 10)
     print("compiling model...")
 
-    model = NaryNet(device, n, n_source, dropout=0, supports=None, gcn_bool=gcn_bool, intra_bool=intra_bool, inter_bool=inter_bool,
+    model = MWNorm(device, n, n_source, dropout=0, supports=None, gcn_bool=gcn_bool, intra_bool=intra_bool, inter_bool=inter_bool,
                     tnorm_bool=tnorm_bool, snorm_bool=snorm_bool, snnorm_bool=snnorm_bool, addaptadj=True, aptinit=None,
                     in_dim=1,out_dim=args.n_pred,residual_channels=args.hidden_channels,dilation_channels=args.hidden_channels,
                     skip_channels=args.hidden_channels,end_channels=args.hidden_channels, kernel_size=2, blocks=1, layers=layers).to(device)
