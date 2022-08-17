@@ -85,7 +85,7 @@ def train(device, model, dataset, n, n_source):
             model.eval()
             mape_val, mae_val, rmse_val, mape_test, mae_test, rmse_test = model_inference(device, model, dataset, args.test_batch_size, args.n_his, args.n_pred, min_va_val, min_val, n, args.scaler) # [horizon, sources+1]
             print(f'Epoch {epoch}:')
-            for i in range(n_source+1):
+            for i in range(n_source):
                 print('Source {}:'.format(i))
                 print('|One Hour  | MAPE: {:6.2%}, {:6.2%}; MAE: {:.2f}, {:.2f}; RMSE: {:.2f}, {:.2f};'
                       .format(mape_val[0, i], mape_test[0, i], mae_val[0, i], mae_test[0, i], rmse_val[0, i], rmse_test[0, i]))
@@ -113,7 +113,7 @@ def train(device, model, dataset, n, n_source):
     print("*"*40)
     print("*"*40)
     print(f'Epoch {epoch}:')
-    for i in range(n_source+1):
+    for i in range(n_source):
         print('Source {}:'.format(i))
         print('|One Hour  | MAPE: {:6.2%}, {:6.2%}; MAE: {:.2f}, {:.2f}; RMSE: {:.2f}, {:.2f};'
               .format(mape_val[0, i], mape_test[0, i], mae_val[0, i], mae_test[0, i], rmse_val[0, i], rmse_test[0, i]))
@@ -145,7 +145,7 @@ def eval(device, n_source, model, dataset, n, versions):
         mape_te_v.append(mape_test)
         mae_te_v.append(mae_test)
         rmse_te_v.append(rmse_test)
-        for i in range(n_source+1):
+        for i in range(n_source):
             print('Source {}:'.format(i))
             print('|One Hour  | MAPE: {:6.2%}, {:6.2%}; MAE: {:.2f}, {:.2f}; RMSE: {:.2f}, {:.2f};'
                   .format(mape_val[0, i], mape_test[0, i], mae_val[0, i], mae_test[0, i], rmse_val[0, i], rmse_test[0, i]))
@@ -163,7 +163,7 @@ def eval(device, n_source, model, dataset, n, versions):
     print("*"*40)
     print("*"*40)    
     print("All Version Average: ")
-    for i in range(n_source+1):
+    for i in range(n_source):
         print('Source {}:'.format(i))
         print('|One Hour  | MAPE: {:6.2%}, {:6.2%}; MAE: {:.2f}, {:.2f}; RMSE: {:.2f}, {:.2f};'
               .format(mape_val[0, i], mape_test[0, i], mae_val[0, i], mae_test[0, i], rmse_val[0, i], rmse_test[0, i]))
