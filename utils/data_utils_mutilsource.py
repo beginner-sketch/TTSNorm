@@ -39,7 +39,7 @@ def seq_gen(len_seq, data_seq, offset, n_frame, n_route, n_source, day_slot, C_0
                 tmp_seq[i * n_slot + j, :, :, :, :] = np.reshape(data_seq[sta:end, :, :], [n_frame, n_route, n_source, C_0])
     return tmp_seq
 
-def data_gen(file_path, data_config, n_route, n_frame=21, n_source=4, day_slot=288, scaler="source_scaler"):
+def data_gen(file_path, data_config, n_route, n_frame=21, n_source=4, day_slot=288, scaler="global_scaler"):
     n_train, n_val, n_test = data_config
     # generate training, validation and test data
     try:
@@ -53,7 +53,7 @@ def data_gen(file_path, data_config, n_route, n_frame=21, n_source=4, day_slot=2
     seq_val = seq_gen(n_val, data_seq, n_train, n_frame, n_route,  n_source, day_slot)
     seq_test = seq_gen(n_test, data_seq, n_train + n_val, n_frame, n_route,  n_source, day_slot)
     # x_stats: dict, the stats for the train dataset, including the value of mean and standard deviation.
-    if scaler == "global_scaler":     # scaler on global
+    if scaler == "global_scaler":     # scaler on global        
         x_stats = {'mean': np.mean(seq_train), 'std': np.std(seq_train)}
         x_train = z_score(seq_train, x_stats['mean'], x_stats['std'])
         x_val = z_score(seq_val, x_stats['mean'], x_stats['std'])
@@ -65,13 +65,13 @@ def data_gen(file_path, data_config, n_route, n_frame=21, n_source=4, day_slot=2
         x_train = z_score(seq_train, x_stats['mean'].reshape(1,1,1,-1,1), x_stats['std'].reshape(1,1,1,-1,1))
         x_val = z_score(seq_val, x_stats['mean'].reshape(1,1,1,-1,1), x_stats['std'].reshape(1,1,1,-1,1))
         x_test = z_score(seq_test, x_stats['mean'].reshape(1,1,1,-1,1), x_stats['std'].reshape(1,1,1,-1,1))
-    if scaler == "mix_scaler":    # bike scaler on their own, taxi scaler on global
-        bike_mean = np.mean(seq_train[:,:,:,0:2,:], axis=(0,1,2,4)) 
-        bike_std = np.std(seq_train[:,:,:,0:2,:], axis=(0,1,2,4))
-        taxi_mean = np.mean(seq_train)
-        taxi_std = np.std(seq_train)
-        mean = np.hstack((np.hstack((bike_mean,taxi_mean)),taxi_mean))
-        std = np.hstack((np.hstack((bike_std,taxi_std)),taxi_std))
+    if scaler == "mix_scaler":    # sub-task scaler on global, taxi scaler on thire own
+        subtask_mean = np.mean(seq_train[:,:,:,0:4,:]).repeat(n_source-1)
+        subtask_std = np.std(seq_train[:,:,:,0:4,:]).repeat(n_source-1)    
+        totaltask_mean = np.mean(seq_train[:,:,:,4,:])
+        totaltask_std = np.std(seq_train[:,:,:,4,:])
+        mean = np.hstack((subtask_mean, totaltask_mean))
+        std = np.hstack((subtask_std, totaltask_std))
         x_stats = {'mean': mean, 'std': std}
         x_train = z_score(seq_train, x_stats['mean'].reshape(1,1,1,-1,1), x_stats['std'].reshape(1,1,1,-1,1))
         x_val = z_score(seq_val, x_stats['mean'].reshape(1,1,1,-1,1), x_stats['std'].reshape(1,1,1,-1,1))
