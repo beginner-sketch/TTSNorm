@@ -1,4 +1,4 @@
-# Multi-Norm
+# Multi-Norm: Multi-way Normalization for Tensor Time Series Forecasting
 This is a implementation of Multi-way Normalization.
 
 # Installation Dependencies
