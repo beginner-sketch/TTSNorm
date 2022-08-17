@@ -1,5 +1,5 @@
-# MWNorm
-This is a implementation of MWNorm.
+# Multi-Norm
+This is a implementation of Multi-way Normalization.
 
 # Installation Dependencies
 
