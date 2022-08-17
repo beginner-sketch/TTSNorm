@@ -28,7 +28,6 @@ parser.add_argument('--data', default = 'NYC', type=str, help = 'NYC or AIR')
 parser.add_argument('--indim', default = 1, type=int, help = 'in_dim is 1 or 4')
 parser.add_argument('--fusion', default = False, type=bool, help='model uses fusion or not')
 parser.add_argument('--mix_loss', default = True, type=bool, help='mix loss or total loss')
-parser.add_argument('--alpha', default = 0.0, type=float, help='loss weight for subtask')
 parser.add_argument('-schemeA', default = 1, type=int, help = 'use schemeA or not')
 parser.add_argument('-schemeB', default = 1, type=int, help = 'use schemeB or not')
 parser.add_argument('-schemeC', default = 1, type=int, help = 'use schemeC or not')
@@ -50,8 +49,6 @@ layers = int(np.log2(args.n_his))
 def train(device, model, dataset, n, n_source):
     target_n = "schemeA{}_schemeB{}_schemeC{}_schemeD{}_schemeE{}_schemeF{}_hc{}_l{}_his{}_pred{}_v{}_scaler{}_fusion{}_mixloss{}".format(args.schemeA, args.schemeB, args.schemeC, args.schemeD, args.schemeE, args.schemeF, args.hidden_channels, layers, args.n_his, args.n_pred, args.version,args.scaler,args.fusion,args.mix_loss)
     target_fname = '{}_{}_{}'.format(args.model, dataset_name, target_n)
-    if args.mix_loss:
-        target_fname = '{}'.format(target_fname, args.alpha)
     target_model_path = os.path.join('MODEL', '{}.h5'.format(target_fname))
     print('=' * 10)
     print("training model...")
@@ -133,8 +130,6 @@ def eval(device, n_source, model, dataset, n, versions):
         min_val = min_va_val = np.array([4e1, 1e5, 1e5] * 3)  
         target_n = "schemeA{}_schemeB{}_schemeC{}_schemeD{}_schemeE{}_schemeF{}_hc{}_l{}_his{}_pred{}_v{}_scaler{}_fusion{}_mixloss{}".format(args.schemeA, args.schemeB, args.schemeC, args.schemeD, args.schemeE, args.schemeF, args.hidden_channels, layers, args.n_his, args.n_pred, _v,args.scaler,args.fusion,args.mix_loss)
         target_fname = '{}_{}_{}'.format(args.model, dataset_name, target_n)
-        if args.mix_loss:
-            target_fname = '{}'.format(target_fname, args.alpha)
         target_model_path = os.path.join('MODEL', '{}.h5'.format(target_fname))        
         if os.path.isfile(target_model_path):
             print(' path is : ', target_model_path)
@@ -197,8 +192,6 @@ def main():
     print("fusion:", args.fusion)
     print("scaler form: ", args.scaler)
     print("mix loss: ", args.mix_loss)
-    if args.mix_loss:
-        print("loss weight (alpha): ", args.alpha)
     start=time.time()
     # load data
     print('=' * 10)
