@@ -6,7 +6,7 @@ import sys
 import argparse
 import numpy as np
 import math
-from models.MultiNorm import *
+from models.TTSNorm import *
 from utils.data_utils_mutilsource import *
 from utils.math_utils_mutilsource import *
 from utils.tester_mutilsource import model_inference
@@ -20,7 +20,7 @@ np.random.seed(1337)  # for reproducibility
 torch.backends.cudnn.benchmark = True
 # Params #
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', default = 'MultiNorm', type=str, help = 'model name')
+parser.add_argument('--model', default = 'TTSNorm', type=str, help = 'model name')
 parser.add_argument('--batch_size', default = 8, type=int, help='batch size')
 parser.add_argument('--test_batch_size', default = 8, type=int, help='test batch size')
 parser.add_argument('--lr', default = 0.0001, type=int, help='learning rate')
@@ -206,7 +206,7 @@ def main():
     print('=' * 10)
     print("compiling model...")
 
-    model = MultiNorm(device, num_nodes=n, num_source=n_source, n_his=args.n_his, n_pred=args.n_pred, schemeA_bool=args.schemeA, schemeB_bool=args.schemeB,
+    model = TTSNorm(device, num_nodes=n, num_source=n_source, n_his=args.n_his, n_pred=args.n_pred, schemeA_bool=args.schemeA, schemeB_bool=args.schemeB,
                     schemeC_bool=args.schemeC, schemeD_bool=args.schemeD,schemeE_bool=args.schemeE, schemeF_bool=args.schemeF, in_dim=1, out_dim=1, 
                     channels=args.hidden_channels, kernel_size=2, layers=layers, fusion_bool=args.fusion).to(device)
 
