@@ -1,5 +1,5 @@
-# Multi-Norm: Multi-way Normalization for Tensor Time Series Forecasting
-This is a implementation of Multi-Norm.
+# TTS-Norm: Forecasting Tensor Time Series via Multi-way Normalization
+This is a implementation of TTS-Norm.
 
 # Installation Dependencies
 
@@ -15,10 +15,10 @@ torch-summary (>= 1.4.5)
 
 # Model Training
 ``` python
-python main.py -mode train
+python main.py -mode train cuda_name
 ```
 
 # Model Evaluation
 ``` python
-python main.py -mode eval
+python main.py -mode eval cuda_name
 ```
