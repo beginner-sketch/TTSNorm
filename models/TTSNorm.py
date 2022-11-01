@@ -198,10 +198,10 @@ class ResidualBlock(nn.Module):
         x = self.residual_convs(x)
         return x, sk, gate
     
-class MultiNorm(nn.Module):
+class TTSNorm(nn.Module):
     def __init__(self, device, num_nodes, num_source, n_his, n_pred, schemeA_bool=False, schemeB_bool=False, schemeC_bool=False, schemeD_bool=False, 
                  schemeE_bool=False, schemeF_bool=False, in_dim=1, out_dim=1, channels=32, kernel_size=2,layers=2, fusion_bool=False):
-        super(MultiNorm, self).__init__()
+        super(TTSNorm, self).__init__()
         self.num_source = num_source
         self.layers = layers
         self.in_dim = in_dim        
