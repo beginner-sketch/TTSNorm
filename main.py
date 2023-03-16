@@ -73,7 +73,7 @@ def train(device, model, dataset, n, n_source):
             pred = model(xh)
             if args.mix_loss:
                 var = torch.var(pred, unbiased=True)
-                shrinkage = 1 - (3 - 2) * var / torch.sum(pred ** 2)
+                shrinkage = 1 - var / torch.sum(pred ** 2)
                 theta = shrinkage * pred
                 loss = criterion(theta, y)
             else:
