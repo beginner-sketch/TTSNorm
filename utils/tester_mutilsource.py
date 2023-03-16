@@ -14,6 +14,10 @@ def multi_pred(device, model, seq, batch_size, n_his, n_pred, dynamic_batch=True
         step_list = []
         test_seq_th = torch.tensor(test_seq, dtype=torch.float32).to(device)
         pred = model(test_seq_th)
+        var = torch.var(pred, unbiased=True)
+        module = torch.sum(pred ** 2)
+        shrinkage = 1 - var / module
+        pred = shrinkage * pred
         pred = pred.data.cpu().numpy()
         pred_list.append(pred)
     #  pred_array -> [batch_size, n_route, C_0)
